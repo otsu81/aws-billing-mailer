@@ -1,0 +1,101 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Cost reporter for monthly billing
+  Uses the Cost Explorer API to generate cost report of the current and past 3 months and sends an e-mail to a recipient list, specified in the input event according to {"EmailRecipients": [email-list]}
+
+
+Parameters:
+  Tax:
+    Type: String
+    Description: The percentage of tax/VAT applied on the AWS bill. Must be specified with 0 or decimal, e.g. Swedish VAT is 0.25
+    Default: 0.25
+  SESAccount:
+    Type: String
+    Description: The account ID where the SES domain and role is located
+    Default: 123456789012
+  SESRoleName:
+    Type: String
+    Description: The rolename with permissions to send emails using SES
+  SESRegion:
+    Type: String
+    Description: The AWS region where the SES domain is configured
+    Default: us-east-1
+  FromEmail:
+    Type: String
+    Description: The e-mail used as sender for SES - must either be non-sandboxed domain or verified e-mail!
+    Default: noreply@example.com
+  ReplyToEmail:
+    Type: String
+    Description: The default reply-to e-mail - must be either non-sandboxed domain or verified
+    Default: reply@example.com
+  EmailRecipients:
+    Type: String
+    Description: Comma-separated list of e-mail recipients of the report, must have citation around emails
+    Default: '"recipient1@example.com", "recipient2@exmaple.com"'
+  CronSchedule:
+    Type: String
+    Description: The cron expression defining when to run the CostReporter function. Default is 3rd every month
+    Default: cron(0 0 3 * ? *)
+
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 15
+
+Resources:
+  CostReporterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: app
+      Handler: main.handler
+      Runtime: python3.8
+      MemorySize: 128
+      Role: !GetAtt CostReporterRole.Arn
+      Events:
+        RunSchedule:
+          Type: Schedule
+          Properties:
+            Description: Runs the CostReporter according to the cron schedule
+            Name: CostReporterSchedule
+            Schedule: !Ref CronSchedule
+            Input: !Join ["",
+              ["{\"EmailRecipients\": ", "[", !Ref EmailRecipients, "]}"]]
+      Environment:
+        Variables:
+          SES_ACCOUNT: !Ref SESAccount
+          SES_ROLE: !Ref SESRoleName
+          SES_REGION: !Ref SESRegion
+          FROM_EMAIL: !Ref FromEmail
+          REPLY_TO_EMAIL: !Ref ReplyToEmail
+          TAX: !Ref Tax
+
+  CostReporterRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: allowAssumeRole
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: sts:AssumeRole
+                Resource: !Sub 'arn:aws:iam::${SESAccount}:role/${SESRoleName}'
+        - PolicyName: allowOrgRead
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: ce:GetCostAndUsage
+                Resource: "*"

@@ -1,0 +1,28 @@
+<html>
+    <head>
+        <title>Cost report %(ACCOUNT_ID)s</title>
+        <style type="text/css">
+            h1,h3,h4 {
+                font-family: sans-serif;
+                font-weight: bold;
+                color: #3e5bef;
+            }
+            p, ul, li {
+                font-family: sans-serif;
+            }
+        </style>
+    </head>
+<body>
+<h3>Monthly report, account %(ACCOUNT_ID)s for %(MONTH)s</h3>
+
+<p>Account total spend, excl VAT: USD <b>%(TOTAL)s</b><br>
+<p>Total VAT: <b>USD %(VAT)s</b><br>
+Total incl VAT: USD <b>%(TOTAL_W_VAT)s</b>
+
+<p>Account total over past 3 months, with VAT: <b>%(TOTAL_3_MO_W_VAT)s</b></p>
+
+<p>For details, see the cost explorer for the account (must be logged on to the console to see):<br>
+<a href="https://console.aws.amazon.com/cost-management/">https://console.aws.amazon.com/cost-management/</a>
+
+<p>For a copy of the monthly billing statement, see the billing console (must be logged in):<br>
+<a href="https://console.aws.amazon.com/billing/">https://console.aws.amazon.com/billing/</a>
