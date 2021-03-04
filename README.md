@@ -8,7 +8,7 @@ This Lambda function will run based on a schedule and e-mail a set of recipients
 >
 >Account total spend, excl VAT: USD 80.00
 >
->Total VAT: USD 20.00
+>Total VAT: USD 20.00 \
 >Total incl VAT: USD 100.00
 >
 >Account total over past 3 months, with VAT: 300.00
