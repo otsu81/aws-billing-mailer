@@ -89,10 +89,3 @@ def handler(event, context):
 
     result = send_email(params, event['EmailRecipients'])
     return result
-
-
-if __name__ == '__main__':
-    event = {
-        'EmailRecipients': ['carlf@axis.com']
-    }
-    handler(event, None)
